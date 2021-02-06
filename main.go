@@ -1,178 +1,43 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"image"
 	"image/color"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"strconv"
+
+	"gio-test/haslett/apiCalls"
+	"gio-test/haslett/components"
 
 	"gioui.org/app"
 	"gioui.org/f32"
 	"gioui.org/font/gofont"
-	"gioui.org/io/pointer"
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-	"gioui.org/widget"
 	"gioui.org/widget/material"
 )
 
-var jsonString string = `{
-    "data": [
-        {
-            "category" : "food",
-            "percentage" : 25,
-            "total" : 300,
-            "colour" : ""
-        },
-        {
-            "category" : "accommodation",
-            "percentage" : 25,
-            "total" : 300,
-            "colour" : ""
-        },
-        {
-            "category" : "travel",
-            "percentage" : 25,
-            "total" : 300,
-            "colour" : ""
-        },
-        {
-            "category" : "gifts",
-            "percentage" : 25,
-            "total" : 300,
-            "colour" : ""
-        }
-    ]
-}`
-
-type stat struct {
-	Data []statChild `json:"data"`
-}
-type newStats struct {
-	Data struct {
-		ReadBankStatements []struct {
-			Category   string      `json:"Category"`
-			Percentage string      `json:"percentage"`
-			Total      float32     `json:"total"`
-			Colour     interface{} `json:"colour"`
-		} `json:"readBankStatements"`
-	} `json:"data"`
-}
-type statChild struct {
-	Category   string      `json:"category"`
-	Percentage float32     `json:"percentage"`
-	Total      float32     `json:"total"`
-	Colour     interface{} `json:"colour"`
-}
-
-func stats(jsonString string) *stat {
-	// Declared an empty interface
-	result := &stat{}
-	myString := []byte(jsonString)
-	// Unmarshal or Decode the JSON to the interface.
-	err := json.Unmarshal(myString, &result)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return result
-}
-
-func getStats() (record newStats) {
-	postBody, _ := json.Marshal(map[string]string{
-		"operationName": "HaslettBankStatements",
-		"query":         "{readBankStatements{Category\nPercentage\nTotal}}",
-	})
-	responseBody := bytes.NewBuffer(postBody)
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responseBody)
-	req.Header.Add("Content-type", "application/json")
-	req.Header.Add("Origin", "http://fakewebsite.com")
-	resp, err := client.Do(req)
-
-	if err != nil {
-		log.Fatal("getStat: ")
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	err2 := json.NewDecoder(resp.Body).Decode(&record)
-	// body, err2 := ioutil.ReadAll(resp.Body)
-
-	if err2 != nil {
-		log.Fatal("getStat err2: ")
-		log.Fatal(err2)
-	}
-	return record
-
-}
-
 func main() {
-	// newStats :=
-	// fmt.Print(d)
+	apiCalls.GetAllStats()
 	go func() {
 		w := app.NewWindow(
 			app.Size(unit.Dp(800), unit.Dp(400)),
 			app.Title("Generic Financial App"),
 		)
 
-		if err := loop(w, &myStats); err != nil {
+		if err := loop(w, apiCalls.MyStats); err != nil {
 			log.Fatal(err)
 		}
 
 		os.Exit(0)
 	}()
 	app.Main()
-}
-
-func loop(w *app.Window, stats *newStats) error {
-	ui := NewUI()
-	var ops op.Ops
-
-	for e := range w.Events() {
-		switch e := e.(type) {
-		case system.DestroyEvent:
-			return e.Err
-		case system.FrameEvent:
-			gtx := layout.NewContext(&ops, e)
-			var axis layout.Axis
-			if e.Size.X < 500 {
-				axis = layout.Vertical
-			} else {
-				axis = layout.Horizontal
-			}
-			if currentScreen == "finance" {
-				flex := layout.Flex{Axis: axis, Alignment: layout.Middle, Spacing: layout.SpaceAround}
-				// initialInset := layout.Inset{Top: unit.Dp(float32(newButton.sizeY))}
-
-				flex.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return PieChart(gtx.Ops, gtx, stats)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return financeList(gtx.Ops, gtx, ui)
-					}),
-				)
-				footerTabs(gtx, e.Size.Y)
-			} else {
-				footerTabs(gtx, e.Size.Y)
-
-			}
-
-			e.Frame(gtx.Ops)
-
-		}
-	}
-	return nil
 }
 
 type UI struct {
@@ -193,46 +58,48 @@ func NewUI() *UI {
 	return ui
 }
 
-type Button struct {
-	pressed      bool
-	currentColor color.NRGBA
-	hoverColor   color.NRGBA
-	initialColor color.NRGBA
-	sizeX        int
-	sizeY        int
-}
+func loop(w *app.Window, stats apiCalls.NewStats) error {
+	Ui := components.NewUI()
+	var ops op.Ops
 
-func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
-	// Avoid affecting the input tree with pointer events.
-	defer op.Push(gtx.Ops).Pop()
-
-	// here we loop through all the events associated with this button.
-	for _, e := range gtx.Events(b) {
-		if e, ok := e.(pointer.Event); ok {
-			switch e.Type {
-			case pointer.Press:
-				currentScreen = screen
-			case pointer.Enter:
-				b.currentColor = b.hoverColor
-			case pointer.Leave:
-				b.currentColor = b.initialColor
+	for e := range w.Events() {
+		switch e := e.(type) {
+		case system.DestroyEvent:
+			return e.Err
+		case system.FrameEvent:
+			gtx := layout.NewContext(&ops, e)
+			var axis layout.Axis
+			if e.Size.X < 500 {
+				axis = layout.Vertical
+			} else {
+				axis = layout.Horizontal
 			}
+			if CurrentScreen == "finance" {
+				flex := layout.Flex{Axis: axis, Alignment: layout.Middle, Spacing: layout.SpaceAround}
+				// initialInset := layout.Inset{Top: unit.Dp(float32(newButton.sizeY))}
+
+				flex.Layout(gtx,
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return PieChart(gtx.Ops, gtx, stats)
+					}),
+					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+						return components.FinanceList(gtx.Ops, gtx, Ui)
+					}),
+				)
+				components.FooterTabs(gtx, e.Size.Y)
+			} else {
+				components.FooterTabs(gtx, e.Size.Y)
+
+			}
+
+			e.Frame(gtx.Ops)
+
 		}
 	}
-
-	// Confine the area for pointer events.
-	pointer.Rect(image.Rect(0, 0, b.sizeX, b.sizeY)).Add(gtx.Ops)
-	pointer.CursorNameOp{Name: pointer.CursorPointer}.Add(gtx.Ops)
-	pointer.InputOp{
-		Tag:   b,
-		Types: pointer.Press | pointer.Enter | pointer.Leave,
-	}.Add(gtx.Ops)
-
-	// Draw the button.
-	return ColorBox(gtx, image.Pt(b.sizeX, b.sizeY), b.currentColor)
+	return nil
 }
 
-func PieChart(ops *op.Ops, gtx layout.Context, stats *newStats) layout.Dimensions {
+func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.Dimensions {
 	var path clip.Path
 	const r = 50 // roundness
 	bounds := f32.Rect(0, 0, 100, 100)
@@ -244,8 +111,9 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats *newStats) layout.Dimension
 	}
 	for i, s := range stats.Data.ReadBankStatements {
 		value, err := strconv.ParseFloat(s.Percentage, 32)
+
 		if err != nil {
-			log.Fatal("PiecChart, convert string to float32")
+			log.Fatal("PieChart, convert string to float32")
 			log.Fatal(err)
 		}
 		percentage := float32(value)
@@ -301,7 +169,9 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats *newStats) layout.Dimension
 			X2 = 0
 			Y2 = 0
 		}
-
+		// if value < 0 {
+		// 	continue
+		// }
 		// used for debugging
 		// fmt.Print(fmt.Sprintf("X: %v, Y: %v, X1: %v, Y1: %v, X2: %v, Y2: %v, Variable: %v\n", X, Y, X1, Y1, X2, Y2, variable))
 		stack := op.Push(ops)
@@ -329,24 +199,7 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats *newStats) layout.Dimension
 }
 
 var (
-	background    = color.NRGBA{R: 0xC0, G: 0xC0, B: 0xC0, A: 0xFF}
-	red           = color.NRGBA{R: 0xC0, G: 0x40, B: 0x40, A: 0xFF}
-	green         = color.NRGBA{R: 0x40, G: 0xC0, B: 0x40, A: 0xFF}
-	blue          = color.NRGBA{R: 0x40, G: 0x40, B: 0xC0, A: 0xFF}
-	list          = &layout.List{Axis: layout.Vertical}
-	masterList    = &layout.List{Axis: layout.Vertical}
-	myStats       = getStats()
-	button        = new(widget.Clickable)
-	buttonState   = true
-	financeButton = &Button{pressed: false, currentColor: blue, initialColor: blue, hoverColor: red, sizeX: 100, sizeY: 50}
-	weddingButton = &Button{pressed: false, currentColor: green, initialColor: green, hoverColor: red, sizeX: 100, sizeY: 50}
-	currentScreen = "finance"
-)
+	masterList = &layout.List{Axis: layout.Vertical}
 
-func ColorBox(gtx layout.Context, size image.Point, color color.NRGBA) layout.Dimensions {
-	defer op.Push(gtx.Ops).Pop()
-	clip.Rect{Max: size}.Add(gtx.Ops)
-	paint.ColorOp{Color: color}.Add(gtx.Ops)
-	paint.PaintOp{}.Add(gtx.Ops)
-	return layout.Dimensions{Size: size}
-}
+	CurrentScreen = "finance"
+)
