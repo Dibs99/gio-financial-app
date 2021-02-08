@@ -10,17 +10,16 @@ import (
 
 	"gio-test/haslett/apiCalls"
 	"gio-test/haslett/components"
+	"gio-test/haslett/config"
 
 	"gioui.org/app"
 	"gioui.org/f32"
-	"gioui.org/font/gofont"
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
-	"gioui.org/widget/material"
 )
 
 func main() {
@@ -37,25 +36,9 @@ func main() {
 
 		os.Exit(0)
 	}()
+
 	app.Main()
-}
 
-type UI struct {
-	theme  *material.Theme
-	active int
-	// list   layout.List
-}
-
-func NewUI() *UI {
-	ui := &UI{
-		theme: material.NewTheme(gofont.Collection()),
-		// list: layout.List{
-		//  Axis:      layout.Vertical,
-		//  Alignment: layout.Middle,
-		// },
-	}
-
-	return ui
 }
 
 func loop(w *app.Window, stats apiCalls.NewStats) error {
@@ -74,26 +57,31 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 			} else {
 				axis = layout.Horizontal
 			}
-			if CurrentScreen == "finance" {
-				flex := layout.Flex{Axis: axis, Alignment: layout.Middle, Spacing: layout.SpaceAround}
-				// initialInset := layout.Inset{Top: unit.Dp(float32(newButton.sizeY))}
 
-				flex.Layout(gtx,
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return PieChart(gtx.Ops, gtx, stats)
-					}),
-					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						return components.FinanceList(gtx.Ops, gtx, Ui)
-					}),
-				)
-				components.FooterTabs(gtx, e.Size.Y)
-			} else {
-				components.FooterTabs(gtx, e.Size.Y)
-
+			components.FooterTabs(gtx, e.Size.Y)
+			masterWidgetList := []layout.Widget{}
+			if apiCalls.Error != "" {
+				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return components.ErrorMessage(gtx, Ui) })
+			}
+			if config.CurrentScreen == "finance" {
+				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return financeLayout(axis, gtx, stats, Ui) })
+			}
+			if config.CurrentScreen == "wedding" {
+				masterWidgetList = append(masterWidgetList,
+					func(gtx layout.Context) layout.Dimensions {
+						if e.Size.X-config.MaxWidth > 0 {
+							op.Offset(f32.Pt((float32(e.Size.X-config.MaxWidth) / 2), 0)).Add(gtx.Ops)
+						}
+						return components.WeddingList(gtx, Ui)
+					})
 			}
 
+			layout.Inset{Bottom: unit.Dp(float32(components.ButtonSizeY))}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return masterList.Layout(gtx, len(masterWidgetList), func(gtx layout.Context, i int) layout.Dimensions {
+					return layout.UniformInset(unit.Dp(2)).Layout(gtx, masterWidgetList[i])
+				})
+			})
 			e.Frame(gtx.Ops)
-
 		}
 	}
 	return nil
@@ -199,7 +187,14 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 }
 
 var (
-	masterList = &layout.List{Axis: layout.Vertical}
-
-	CurrentScreen = "finance"
+	masterList = layout.List{
+		Axis: layout.Vertical,
+	}
 )
+
+func newMasterList() *layout.List {
+	newMasterList := new(layout.List)
+	newMasterList.Axis = layout.Vertical
+
+	return newMasterList
+}

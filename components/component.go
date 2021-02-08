@@ -27,17 +27,18 @@ var (
 		SingleLine: true,
 		Submit:     true,
 	}
-	list = &layout.List{Axis: layout.Vertical}
+	list        = layout.List{Axis: layout.Vertical}
+	listWedding = layout.List{Axis: layout.Vertical, Alignment: layout.Middle}
 )
 
-type thisUI struct {
+type ThisUi struct {
 	theme  *material.Theme
 	active int
 	// list   layout.List
 }
 
-func NewUI() *thisUI {
-	ui := &thisUI{
+func NewUI() *ThisUi {
+	ui := &ThisUi{
 		theme: material.NewTheme(gofont.Collection()),
 		// list: layout.List{
 		//  Axis:      layout.Vertical,
@@ -48,7 +49,7 @@ func NewUI() *thisUI {
 	return ui
 }
 
-func firstInput(gtx layout.Context, ui *thisUI) layout.Widget {
+func firstInput(gtx layout.Context, ui *ThisUi) layout.Widget {
 
 	e := material.Editor(ui.theme, editor, "start date yyyy-MM-dd")
 	e.Font.Style = text.Italic
@@ -61,7 +62,7 @@ func firstInput(gtx layout.Context, ui *thisUI) layout.Widget {
 	}
 }
 
-func inputWidget(gtx layout.Context, ui *thisUI) layout.Widget {
+func inputWidget(gtx layout.Context, ui *ThisUi) layout.Widget {
 
 	for _, e := range lineEditor.Events() {
 		if e, ok := e.(widget.SubmitEvent); ok {
@@ -81,37 +82,49 @@ func inputWidget(gtx layout.Context, ui *thisUI) layout.Widget {
 	}
 }
 
-func FinanceList(ops *op.Ops, gtx layout.Context, ui *thisUI) layout.Dimensions {
+func FinanceList(ops *op.Ops, gtx layout.Context, ui *ThisUi) layout.Dimensions {
 	var (
-		uniformInset     = 16
+		// uniformInset     = 16
 		financeChildMaxY = 50
 	)
 	widgets := financeChildren(gtx, ui, financeChildMaxY)
-	return list.Layout(gtx, len(widgets), func(gtx layout.Context, i int) layout.Dimensions {
-		return layout.UniformInset(unit.Dp(float32(uniformInset))).Layout(gtx, widgets[i])
-	})
+	flex := layout.Flex{Axis: layout.Vertical}
+	// return list.Layout(gtx, len(widgets), func(gtx layout.Context, i int) layout.Dimensions {
+	// 	return layout.UniformInset(unit.Dp(float32(uniformInset))).Layout(gtx, widgets[i])
+	// })
+
+	return flex.Layout(gtx, widgets...)
 
 }
 
-func financeChildren(gtx layout.Context, ui *thisUI, financeChildMaxY int) []layout.Widget {
-	var array []layout.Widget
-	array = append(array, firstInput(gtx, ui))
-	array = append(array, inputWidget(gtx, ui))
+func financeChildren(gtx layout.Context, ui *ThisUi, financeChildMaxY int) []layout.FlexChild {
+	var array []layout.FlexChild
+	array = append(array, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+		return layout.UniformInset(unit.Dp(16)).Layout(gtx, firstInput(gtx, ui))
+	}))
+	array = append(array, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+		return layout.UniformInset(unit.Dp(16)).Layout(gtx, inputWidget(gtx, ui))
+	}))
 	stats := apiCalls.MyStats
 	for i := 0; i < len(stats.Data.ReadBankStatements); i++ {
-		widget := financeChild(gtx, financeChildMaxY, ui, i)
+		child := financeChild(gtx, financeChildMaxY, ui, i)
+		widget := layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return layout.UniformInset(unit.Dp(16)).Layout(gtx, child)
+		})
+		// widget := layout.Rigid(financeChild(gtx, financeChildMaxY, ui, i))
 		array = append(array, widget)
 	}
 	return array
 }
 
-func financeChild(gtx layout.Context, financeChildMaxY int, ui *thisUI, index int) layout.Widget {
+func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index int) layout.Widget {
 	var stat = apiCalls.MyStats.Data.ReadBankStatements[index]
 	return func(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Max.Y = financeChildMaxY
 		gtx.Constraints.Min.Y = financeChildMaxY
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
+		// box
 		di := image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Max.Y)
 		stack := op.Push(gtx.Ops)
 		clip.Rect{Max: di}.Add(gtx.Ops)
@@ -119,9 +132,10 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *thisUI, index in
 		paint.PaintOp{}.Add(gtx.Ops)
 		stack.Pop()
 
-		flex3 := layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween, Alignment: layout.Middle}
+		flex3 := layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}
 		dims := flex3.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				// circle and Category
 				max := gtx.Constraints.Max.Y / 2
 				myInset := unit.Dp(float32(gtx.Constraints.Max.Y))
 				body := material.Body1(ui.theme, stat.Category)
@@ -137,6 +151,7 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *thisUI, index in
 				})
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				// text
 				myInset := unit.Dp(float32(gtx.Constraints.Max.Y / 2))
 				body := material.Body1(ui.theme, fmt.Sprintf("$%v", stat.Total))
 				return layout.Inset{Right: myInset, Top: unit.Dp((float32(gtx.Constraints.Max.Y) - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
@@ -149,13 +164,27 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *thisUI, index in
 
 }
 
+func ErrorMessage(gtx layout.Context, ui *ThisUi) layout.Dimensions {
+	myInset := 50
+	di := image.Pt(gtx.Constraints.Max.X, myInset)
+	stack := op.Push(gtx.Ops)
+	clip.Rect{Max: di}.Add(gtx.Ops)
+	paint.ColorOp{Color: config.Red}.Add(gtx.Ops)
+	paint.PaintOp{}.Add(gtx.Ops)
+	stack.Pop()
+	text := material.Body1(ui.theme, apiCalls.Error)
+	return layout.UniformInset(unit.Dp((float32(myInset)-text.TextSize.V)/2.5)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return text.Layout(gtx)
+	})
+}
+
 func FooterTabs(gtx layout.Context, screenSize int) layout.Dimensions {
-	inset := layout.Inset{Top: unit.Dp(float32(screenSize - financeButton.sizeY))}
+	inset := layout.Inset{Top: unit.Dp(float32(screenSize - FinanceButton.sizeY))}
 	flex := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle, Spacing: layout.SpaceAround}
 	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return flex.Layout(gtx,
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return financeButton.Layout(gtx, "finance")
+				return FinanceButton.Layout(gtx, "finance")
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return weddingButton.Layout(gtx, "wedding")
