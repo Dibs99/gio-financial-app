@@ -96,7 +96,7 @@ func callGetStats(postBody []byte) {
 	var record NewStats
 	responseBody := bytes.NewBuffer(postBody)
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responseBody)
+	req, err := http.NewRequest("POST", "http://128.199.84.236/graphql", responseBody)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Origin", "http://fakewebsite.com")
 	resp, err := client.Do(req)
@@ -134,7 +134,7 @@ func GetAllWeddings() {
 	responsebody := bytes.NewBuffer(postBody)
 	client := &http.Client{}
 
-	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responsebody)
+	req, err := http.NewRequest("POST", "http://128.199.84.236/graphql", responsebody)
 	if err != nil {
 		Error = err.Error()
 	}

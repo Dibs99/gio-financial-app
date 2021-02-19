@@ -23,10 +23,10 @@ import (
 )
 
 func main() {
-	// apiCalls.GetAllStats()
+	apiCalls.GetAllStats()
 	go func() {
 		w := app.NewWindow(
-			app.Size(unit.Dp(400), unit.Dp(400)),
+			app.Size(unit.Dp(400), unit.Dp(500)),
 			app.Title("Generic Financial App"),
 		)
 
@@ -53,7 +53,8 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 			gtx := layout.NewContext(&ops, e)
 			config.Set(gtx, e.Size)
 			var axis layout.Axis
-			if e.Size.X < 500 {
+
+			if float32(gtx.Constraints.Min.X/gtx.Constraints.Min.Y) < float32(0.6) {
 				axis = layout.Vertical
 			} else {
 				axis = layout.Horizontal

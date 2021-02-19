@@ -85,7 +85,7 @@ func inputWidget(gtx layout.Context, ui *ThisUi) layout.Widget {
 func FinanceList(ops *op.Ops, gtx layout.Context, ui *ThisUi) layout.Dimensions {
 	var (
 		// uniformInset     = 16
-		financeChildMaxY = 50
+		financeChildMaxY float32 = 50
 	)
 	widgets := financeChildren(gtx, ui, financeChildMaxY)
 	flex := layout.Flex{Axis: layout.Vertical}
@@ -97,7 +97,7 @@ func FinanceList(ops *op.Ops, gtx layout.Context, ui *ThisUi) layout.Dimensions 
 
 }
 
-func financeChildren(gtx layout.Context, ui *ThisUi, financeChildMaxY int) []layout.FlexChild {
+func financeChildren(gtx layout.Context, ui *ThisUi, financeChildMaxY float32) []layout.FlexChild {
 	var array []layout.FlexChild
 	array = append(array, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 		return layout.UniformInset(unit.Dp(16)).Layout(gtx, firstInput(gtx, ui))
@@ -117,11 +117,11 @@ func financeChildren(gtx layout.Context, ui *ThisUi, financeChildMaxY int) []lay
 	return array
 }
 
-func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index int) layout.Widget {
+func financeChild(gtx layout.Context, financeChildMaxY float32, ui *ThisUi, index int) layout.Widget {
 	var stat = apiCalls.MyStats.Data.ReadBankStatements[index]
 	return func(gtx layout.Context) layout.Dimensions {
-		gtx.Constraints.Max.Y = financeChildMaxY
-		gtx.Constraints.Min.Y = financeChildMaxY
+		gtx.Constraints.Max.Y = gtx.Px(unit.Dp(financeChildMaxY))
+		gtx.Constraints.Min.Y = gtx.Px(unit.Dp(financeChildMaxY))
 		gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
 		// box
@@ -137,9 +137,9 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index in
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				// circle and Category
 				max := gtx.Constraints.Max.Y / 2
-				myInset := unit.Dp(float32(gtx.Constraints.Max.Y))
+				myInset := unit.Dp(financeChildMaxY)
 				body := material.Body1(ui.theme, stat.Category)
-				return layout.Inset{Left: myInset, Top: unit.Dp((float32(gtx.Constraints.Max.Y) - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Left: myInset, Top: unit.Dp((financeChildMaxY - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					roundness := float32(max / 2)
 					stack := op.Save(gtx.Ops)
 					op.Offset(f32.Pt(float32(-max-5), 0)).Add(gtx.Ops)
@@ -152,9 +152,9 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index in
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				// text
-				myInset := unit.Dp(float32(gtx.Constraints.Max.Y / 2))
+				myInset := unit.Dp(financeChildMaxY / 2)
 				body := material.Body1(ui.theme, fmt.Sprintf("$%v", stat.Total))
-				return layout.Inset{Right: myInset, Top: unit.Dp((float32(gtx.Constraints.Max.Y) - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Right: myInset, Top: unit.Dp((financeChildMaxY - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return body.Layout(gtx)
 				})
 			}),
