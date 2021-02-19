@@ -126,11 +126,11 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index in
 
 		// box
 		di := image.Pt(gtx.Constraints.Max.X, gtx.Constraints.Max.Y)
-		stack := op.Push(gtx.Ops)
+		stack := op.Save(gtx.Ops)
 		clip.Rect{Max: di}.Add(gtx.Ops)
 		paint.ColorOp{Color: config.Red}.Add(gtx.Ops)
 		paint.PaintOp{}.Add(gtx.Ops)
-		stack.Pop()
+		stack.Load()
 
 		flex3 := layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}
 		dims := flex3.Layout(gtx,
@@ -141,12 +141,12 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index in
 				body := material.Body1(ui.theme, stat.Category)
 				return layout.Inset{Left: myInset, Top: unit.Dp((float32(gtx.Constraints.Max.Y) - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					roundness := float32(max / 2)
-					stack := op.Push(gtx.Ops)
+					stack := op.Save(gtx.Ops)
 					op.Offset(f32.Pt(float32(-max-5), 0)).Add(gtx.Ops)
 					clip.RRect{Rect: f32.Rect(0, 0, float32(max), float32(max)), SE: roundness, SW: roundness, NW: roundness, NE: roundness}.Add(gtx.Ops)
 					paint.ColorOp{Color: stat.Colour.(color.NRGBA)}.Add(gtx.Ops)
 					paint.PaintOp{}.Add(gtx.Ops)
-					stack.Pop()
+					stack.Load()
 					return body.Layout(gtx)
 				})
 			}),
@@ -165,30 +165,30 @@ func financeChild(gtx layout.Context, financeChildMaxY int, ui *ThisUi, index in
 }
 
 func ErrorMessage(gtx layout.Context, ui *ThisUi) layout.Dimensions {
-	myInset := 50
-	di := image.Pt(gtx.Constraints.Max.X, myInset)
-	stack := op.Push(gtx.Ops)
+	var myInset float32 = 50
+	di := image.Pt(gtx.Constraints.Max.X, gtx.Px(unit.Dp(myInset)))
+	stack := op.Save(gtx.Ops)
 	clip.Rect{Max: di}.Add(gtx.Ops)
 	paint.ColorOp{Color: config.Red}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
-	stack.Pop()
+	stack.Load()
 	text := material.Body1(ui.theme, apiCalls.Error)
 	return layout.UniformInset(unit.Dp((float32(myInset)-text.TextSize.V)/2.5)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return text.Layout(gtx)
 	})
 }
 
-func FooterTabs(gtx layout.Context, screenSize int) layout.Dimensions {
-	inset := layout.Inset{Top: unit.Dp(float32(screenSize - FinanceButton.sizeY))}
+func FooterTabs(gtx layout.Context, screenSize image.Point, ui *ThisUi) layout.Dimensions {
+	// inset :=
 	flex := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle, Spacing: layout.SpaceAround}
-	return inset.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-		return flex.Layout(gtx,
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return FinanceButton.Layout(gtx, "finance")
-			}),
-			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return weddingButton.Layout(gtx, "wedding")
-			}),
-		)
-	})
+
+	return flex.Layout(gtx,
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return FinanceButton.Layout(gtx, "finance")
+		}),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			return weddingButton.Layout(gtx, "wedding")
+		}),
+	)
+
 }

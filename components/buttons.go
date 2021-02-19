@@ -11,16 +11,17 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
+	"gioui.org/unit"
 	"gioui.org/widget"
 )
 
 var (
-	button           = new(widget.Clickable)
-	buttonState      = true
-	FinanceButton    = Button{pressed: false, currentColor: config.Blue, initialColor: config.Blue, hoverColor: config.Red, sizeX: 100, sizeY: ButtonSizeY}
-	weddingButton    = Button{pressed: false, currentColor: config.Green, initialColor: config.Green, hoverColor: config.Red, sizeX: 100, sizeY: ButtonSizeY, callBack: apiCalls.GetAllWeddings}
-	weddingBoxButton = AreaButton{pressed: false, currentColor: config.White, initialColor: config.White, hoverColor: config.OffWhite}
-	ButtonSizeY      = 50
+	button                   = new(widget.Clickable)
+	buttonState              = true
+	FinanceButton            = Button{pressed: false, currentColor: config.Blue, initialColor: config.Blue, hoverColor: config.Red, sizeX: 100, sizeY: 50}
+	weddingButton            = Button{pressed: false, currentColor: config.Green, initialColor: config.Green, hoverColor: config.Red, sizeX: 100, sizeY: ButtonSizeY, callBack: apiCalls.GetAllWeddings}
+	weddingBoxButton         = AreaButton{pressed: false, currentColor: config.Red, initialColor: config.Red, hoverColor: config.OffWhite}
+	ButtonSizeY      float32 = 50
 	// weddingBoxButton =
 )
 
@@ -29,14 +30,14 @@ type Button struct {
 	currentColor color.NRGBA
 	hoverColor   color.NRGBA
 	initialColor color.NRGBA
-	sizeX        int
-	sizeY        int
+	sizeX        float32
+	sizeY        float32
 	callBack     func()
 }
 
 func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 	// Avoid affecting the input tree with pointer events.
-	defer op.Push(gtx.Ops).Pop()
+	defer op.Save(gtx.Ops).Load()
 
 	// here we loop through all the events associated with this button.
 	for _, e := range gtx.Events(b) {
@@ -44,7 +45,7 @@ func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 			switch e.Type {
 			case pointer.Press:
 				config.CurrentScreen = screen
-				b.callBack()
+				// b.callBack()
 			case pointer.Enter:
 				b.currentColor = b.hoverColor
 			case pointer.Leave:
@@ -52,9 +53,10 @@ func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 			}
 		}
 	}
-
+	sizeX := gtx.Px(unit.Dp(b.sizeX))
+	sizeY := gtx.Px(unit.Dp(b.sizeY))
 	// Confine the area for pointer events.
-	pointer.Rect(image.Rect(0, 0, b.sizeX, b.sizeY)).Add(gtx.Ops)
+	pointer.Rect(image.Rect(0, 0, sizeX, sizeY)).Add(gtx.Ops)
 	pointer.CursorNameOp{Name: pointer.CursorPointer}.Add(gtx.Ops)
 	pointer.InputOp{
 		Tag:   b,
@@ -62,12 +64,13 @@ func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 	}.Add(gtx.Ops)
 
 	// Draw the button.
-	return ColorBox(gtx, image.Pt(b.sizeX, b.sizeY), b.currentColor)
+	return ColorBox(gtx, image.Pt(sizeX, sizeY), b.currentColor)
 }
 
 func ColorBox(gtx layout.Context, size image.Point, color color.NRGBA) layout.Dimensions {
-	defer op.Push(gtx.Ops).Pop()
-	clip.Rect{Max: size}.Add(gtx.Ops)
+	dr := image.Rectangle{Max: size}
+	defer op.Save(gtx.Ops).Load()
+	clip.Rect(dr).Add(gtx.Ops)
 	paint.ColorOp{Color: color}.Add(gtx.Ops)
 	paint.PaintOp{}.Add(gtx.Ops)
 	return layout.Dimensions{Size: size}
@@ -82,7 +85,7 @@ type AreaButton struct {
 
 func (b *AreaButton) Layout(gtx layout.Context, screen string, area layout.Dimensions) layout.Dimensions {
 	// Avoid affecting the input tree with pointer events.
-	defer op.Push(gtx.Ops).Pop()
+	defer op.Save(gtx.Ops).Load()
 
 	// here we loop through all the events associated with this button.
 	for _, e := range gtx.Events(b) {

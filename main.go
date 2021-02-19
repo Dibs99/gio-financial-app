@@ -23,10 +23,10 @@ import (
 )
 
 func main() {
-	apiCalls.GetAllStats()
+	// apiCalls.GetAllStats()
 	go func() {
 		w := app.NewWindow(
-			app.Size(unit.Dp(800), unit.Dp(400)),
+			app.Size(unit.Dp(400), unit.Dp(400)),
 			app.Title("Generic Financial App"),
 		)
 
@@ -51,14 +51,13 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 			return e.Err
 		case system.FrameEvent:
 			gtx := layout.NewContext(&ops, e)
+			config.Set(gtx, e.Size)
 			var axis layout.Axis
 			if e.Size.X < 500 {
 				axis = layout.Vertical
 			} else {
 				axis = layout.Horizontal
 			}
-
-			components.FooterTabs(gtx, e.Size.Y)
 			masterWidgetList := []layout.Widget{}
 			if apiCalls.Error != "" {
 				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return components.ErrorMessage(gtx, Ui) })
@@ -81,6 +80,12 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 					return layout.UniformInset(unit.Dp(2)).Layout(gtx, masterWidgetList[i])
 				})
 			})
+
+			footerSave := op.Save(gtx.Ops)
+			op.Offset(f32.Pt(0, float32(gtx.Constraints.Max.Y-gtx.Px(unit.Dp(components.ButtonSizeY))))).Add(gtx.Ops)
+			components.FooterTabs(gtx, e.Size, Ui)
+			footerSave.Load()
+
 			e.Frame(gtx.Ops)
 		}
 	}
@@ -158,11 +163,11 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 			Y2 = 0
 		}
 		// if value < 0 {
-		// 	continue
+		//  continue
 		// }
 		// used for debugging
 		// fmt.Print(fmt.Sprintf("X: %v, Y: %v, X1: %v, Y1: %v, X2: %v, Y2: %v, Variable: %v\n", X, Y, X1, Y1, X2, Y2, variable))
-		stack := op.Push(ops)
+		stack := op.Save(ops)
 		path.Begin(ops)
 		path.MoveTo(f32.Pt(50, 50))
 		path.LineTo(f32.Pt(X, Y))
@@ -178,7 +183,7 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 		paint.ColorOp{Color: s.Colour.(color.NRGBA)}.Add(ops)
 
 		paint.PaintOp{}.Add(ops)
-		stack.Pop()
+		stack.Load()
 		variableCount += percentage
 		xCount = X
 		YCount = Y
