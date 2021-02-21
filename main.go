@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"time"
 
 	"gio-test/haslett/apiCalls"
 	"gio-test/haslett/components"
@@ -41,6 +42,9 @@ func main() {
 
 }
 
+var startTime = time.Now()
+var duration = 10 * time.Second
+
 func loop(w *app.Window, stats apiCalls.NewStats) error {
 	Ui := components.NewUI()
 	var ops op.Ops
@@ -64,9 +68,24 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return components.ErrorMessage(gtx, Ui) })
 			}
 			if config.CurrentScreen == "finance" {
+
+				// elapsed := time.Now().Sub(startTime)
+				// progress := elapsed.Seconds() / duration.Seconds()
+				// // fmt.Print(progress)
+				// if progress < 1 {
+
+				// 	// The progress bar hasn’t yet finished animating.
+				// 	op.InvalidateOp{}.Add(gtx.Ops)
+				// } else {
+				// 	progress = 1
+				// }
+				// myStack := op.Save(gtx.Ops)
+				// config.MyAlpha = uint8(progress * 244)
+				// myStack.Load()
+				// fmt.Print(config.MyAlpha)
 				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return financeLayout(axis, gtx, stats, Ui) })
 			}
-			if config.CurrentScreen == "wedding" {
+			if config.CurrentScreen == "weddings" {
 				masterWidgetList = append(masterWidgetList,
 					func(gtx layout.Context) layout.Dimensions {
 						if e.Size.X-config.MaxWidth > 0 {
@@ -75,13 +94,24 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 						return components.WeddingList(gtx, Ui)
 					})
 			}
-
-			layout.Inset{Bottom: unit.Dp(float32(components.ButtonSizeY))}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			if config.CurrentScreen == "wedding" {
+				masterWidgetList = append(masterWidgetList,
+					func(gtx layout.Context) layout.Dimensions {
+						if e.Size.X-config.MaxWidth > 0 {
+							op.Offset(f32.Pt((float32(e.Size.X-config.MaxWidth) / 2), 0)).Add(gtx.Ops)
+						}
+						return components.WeddingScreen(gtx, Ui)
+					})
+			}
+			// layout the screen with space for footertabs at the bottom and space at the top for mobile
+			masterList.Axis = layout.Vertical
+			layout.Inset{Top: unit.Dp(40), Bottom: unit.Dp(float32(components.ButtonSizeY))}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 				return masterList.Layout(gtx, len(masterWidgetList), func(gtx layout.Context, i int) layout.Dimensions {
 					return layout.UniformInset(unit.Dp(2)).Layout(gtx, masterWidgetList[i])
 				})
 			})
 
+			// Push the footer tabs to the bottom of the screen
 			footerSave := op.Save(gtx.Ops)
 			op.Offset(f32.Pt(0, float32(gtx.Constraints.Max.Y-gtx.Px(unit.Dp(components.ButtonSizeY))))).Add(gtx.Ops)
 			components.FooterTabs(gtx, e.Size, Ui)
@@ -193,9 +223,7 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 }
 
 var (
-	masterList = layout.List{
-		Axis: layout.Vertical,
-	}
+	masterList = new(layout.List)
 )
 
 func newMasterList() *layout.List {

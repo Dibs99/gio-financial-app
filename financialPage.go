@@ -13,7 +13,9 @@ func financeLayout(axis layout.Axis, gtx layout.Context, stats apiCalls.NewStats
 
 	return flex.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return PieChart(gtx.Ops, gtx, stats)
+
+			area := PieChart(gtx.Ops, gtx, stats)
+			return components.PieChartAreaButton.Layout(gtx, area)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return components.FinanceList(gtx.Ops, gtx, Ui)

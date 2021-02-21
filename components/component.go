@@ -27,8 +27,8 @@ var (
 		SingleLine: true,
 		Submit:     true,
 	}
-	list        = layout.List{Axis: layout.Vertical}
-	listWedding = layout.List{Axis: layout.Vertical, Alignment: layout.Middle}
+	listWedding = new(layout.List)
+	// test        = &listWedding
 )
 
 type ThisUi struct {
@@ -89,9 +89,6 @@ func FinanceList(ops *op.Ops, gtx layout.Context, ui *ThisUi) layout.Dimensions 
 	)
 	widgets := financeChildren(gtx, ui, financeChildMaxY)
 	flex := layout.Flex{Axis: layout.Vertical}
-	// return list.Layout(gtx, len(widgets), func(gtx layout.Context, i int) layout.Dimensions {
-	// 	return layout.UniformInset(unit.Dp(float32(uniformInset))).Layout(gtx, widgets[i])
-	// })
 
 	return flex.Layout(gtx, widgets...)
 
@@ -111,7 +108,6 @@ func financeChildren(gtx layout.Context, ui *ThisUi, financeChildMaxY float32) [
 		widget := layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.UniformInset(unit.Dp(16)).Layout(gtx, child)
 		})
-		// widget := layout.Rigid(financeChild(gtx, financeChildMaxY, ui, i))
 		array = append(array, widget)
 	}
 	return array
@@ -152,8 +148,12 @@ func financeChild(gtx layout.Context, financeChildMaxY float32, ui *ThisUi, inde
 			}),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				// text
+				text := fmt.Sprintf("$%v", stat.Total)
+				if PieChartAreaButton.pressed {
+					text = stat.Percentage
+				}
 				myInset := unit.Dp(financeChildMaxY / 2)
-				body := material.Body1(ui.theme, fmt.Sprintf("$%v", stat.Total))
+				body := material.Body1(ui.theme, text)
 				return layout.Inset{Right: myInset, Top: unit.Dp((financeChildMaxY - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					return body.Layout(gtx)
 				})
@@ -187,7 +187,7 @@ func FooterTabs(gtx layout.Context, screenSize image.Point, ui *ThisUi) layout.D
 			return FinanceButton.Layout(gtx, "finance")
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			return weddingButton.Layout(gtx, "wedding")
+			return weddingButton.Layout(gtx, "weddings")
 		}),
 	)
 

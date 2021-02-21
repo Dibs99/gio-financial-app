@@ -59,6 +59,21 @@ type variable struct {
 }
 
 type Weddings struct {
+	Data struct {
+		ReadHaslettWeddingss struct {
+			Edges []WeddingNode `json:"edges"`
+		} `json:"readHaslettWeddingss"`
+	} `json:"data"`
+}
+
+type WeddingNode struct {
+	Node struct {
+		ID      string      `json:"ID"`
+		Name    string      `json:"Name"`
+		Date    string      `json:"Date"`
+		Package interface{} `json:"Package"`
+		Stage   string      `json:"Stage"`
+	} `json:"node"`
 }
 
 var (
@@ -128,13 +143,13 @@ func GetAllWeddings() {
 
 	var record Weddings
 	postBody, _ := json.Marshal(graphql{
-		OperationName: "readHaslettWeddingss",
-		Query:         "{\n readHaslettWeddingss {\n edges {\n node {\n ID\n Name\n Date\n Package\n }\n }\n }\n}\n",
+		OperationName: "readHaslettWeddingssConnection",
+		Query:         "{ readHaslettWeddingss { edges { node { ID Name Date Package Stage } } } }",
 	})
 	responsebody := bytes.NewBuffer(postBody)
 	client := &http.Client{}
 
-	req, err := http.NewRequest("POST", "http://128.199.84.236/graphql", responsebody)
+	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responsebody)
 	if err != nil {
 		Error = err.Error()
 	}
@@ -148,6 +163,8 @@ func GetAllWeddings() {
 		Error = err2.Error()
 	}
 
+	// body, _ := ioutil.ReadAll(resp.Body)
+	// fmt.Print(string(body))
 	if resp != nil {
 		defer resp.Body.Close()
 		err3 := json.NewDecoder(resp.Body).Decode(&record)
@@ -155,6 +172,6 @@ func GetAllWeddings() {
 			Error = err3.Error()
 		}
 	}
-	fmt.Print(record)
+	// fmt.Print(record)
 	MyWeddings = record
 }
