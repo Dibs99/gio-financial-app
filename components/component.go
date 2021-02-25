@@ -134,7 +134,7 @@ func financeChild(gtx layout.Context, financeChildMaxY float32, ui *ThisUi, inde
 				// circle and Category
 				max := gtx.Constraints.Max.Y / 2
 				myInset := unit.Dp(financeChildMaxY)
-				body := material.Body1(ui.theme, stat.Category)
+				body := material.Body1(ui.theme, stat.MyCategory)
 				return layout.Inset{Left: myInset, Top: unit.Dp((financeChildMaxY - body.TextSize.V) / 2.5)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 					roundness := float32(max / 2)
 					stack := op.Save(gtx.Ops)

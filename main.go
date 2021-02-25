@@ -3,12 +3,14 @@ package main
 import (
 	"image"
 	"image/color"
+	"image/png"
 	"log"
 	"math/rand"
 	"os"
 	"strconv"
 	"time"
 
+	"gio-test/haslett/animate"
 	"gio-test/haslett/apiCalls"
 	"gio-test/haslett/components"
 	"gio-test/haslett/config"
@@ -69,21 +71,8 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 			}
 			if config.CurrentScreen == "finance" {
 
-				// elapsed := time.Now().Sub(startTime)
-				// progress := elapsed.Seconds() / duration.Seconds()
-				// // fmt.Print(progress)
-				// if progress < 1 {
-
-				// 	// The progress bar hasn’t yet finished animating.
-				// 	op.InvalidateOp{}.Add(gtx.Ops)
-				// } else {
-				// 	progress = 1
-				// }
-				// myStack := op.Save(gtx.Ops)
-				// config.MyAlpha = uint8(progress * 244)
-				// myStack.Load()
-				// fmt.Print(config.MyAlpha)
 				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return financeLayout(axis, gtx, stats, Ui) })
+
 			}
 			if config.CurrentScreen == "weddings" {
 				masterWidgetList = append(masterWidgetList,
@@ -110,17 +99,32 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 					return layout.UniformInset(unit.Dp(2)).Layout(gtx, masterWidgetList[i])
 				})
 			})
+			animate.FadeInValue(gtx, config.Background, 254)
 
 			// Push the footer tabs to the bottom of the screen
 			footerSave := op.Save(gtx.Ops)
 			op.Offset(f32.Pt(0, float32(gtx.Constraints.Max.Y-gtx.Px(unit.Dp(components.ButtonSizeY))))).Add(gtx.Ops)
 			components.FooterTabs(gtx, e.Size, Ui)
 			footerSave.Load()
-
 			e.Frame(gtx.Ops)
 		}
 	}
 	return nil
+}
+
+func drawImage(ops *op.Ops) {
+	f, err := os.Open("./hamster.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	img, err2 := png.Decode(f)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+	imageOp := paint.NewImageOp(img)
+	imageOp.Add(ops)
+	op.Affine(f32.Affine2D{}.Scale(f32.Pt(0, 0), f32.Pt(4, 4)))
+	paint.PaintOp{}.Add(ops)
 }
 
 func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.Dimensions {
@@ -134,6 +138,17 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 		stats.Data.ReadBankStatements[index].Colour = colour
 	}
 	for i, s := range stats.Data.ReadBankStatements {
+		random := func() uint8 {
+			return uint8(rand.Intn(80) + 80)
+		}
+		if s.Colour == nil {
+			colour := color.NRGBA{G: random(), B: random(), R: random(), A: 0xFF}
+			s.Colour = colour
+			setColour(i, colour)
+		}
+		if s.MyCategory == "payments" {
+			continue
+		}
 		value, err := strconv.ParseFloat(s.Percentage, 32)
 
 		if err != nil {
@@ -152,15 +167,6 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 		var Y2 float32 = YCount
 		// colour of this stat
 
-		random := func() uint8 {
-			return uint8(rand.Intn(80) + 80)
-		}
-
-		if s.Colour == nil {
-			colour := color.NRGBA{G: random(), B: random(), R: random(), A: 0xFF}
-			s.Colour = colour
-			setColour(i, colour)
-		}
 		// X and Y coordinates are scaffold out via the variable
 		if variable > 100 && variable < 200 {
 			X = 100

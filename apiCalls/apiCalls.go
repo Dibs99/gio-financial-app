@@ -40,7 +40,7 @@ var jsonString string = `{
 type NewStats struct {
 	Data struct {
 		ReadBankStatements []struct {
-			Category   string      `json:"Category"`
+			MyCategory string      `json:"mycategory"`
 			Percentage string      `json:"percentage"`
 			Total      float32     `json:"total"`
 			Colour     interface{} `json:"colour"`
@@ -85,7 +85,7 @@ var (
 func GetAllStats() {
 	postBody, _ := json.Marshal(graphql{
 		OperationName: "HaslettBankStatements",
-		Query:         "{readBankStatements{Category\nPercentage\nTotal}}",
+		Query:         "{readBankStatements{MyCategory\nPercentage\nTotal}}",
 	})
 
 	callGetStats(postBody)
@@ -94,7 +94,7 @@ func GetAllStats() {
 func GetStatsWithDate(startDate string, endDate string) {
 	postBody, _ := json.Marshal(graphql{
 		OperationName: "HaslettBankStatements",
-		Query:         fmt.Sprintf("{readBankStatements(startDate:\"%v\", endDate:\"%v\"){Category\nPercentage\nTotal}}", startDate, endDate),
+		Query:         fmt.Sprintf("{readBankStatements(startDate:\"%v\", endDate:\"%v\"){MyCategory\nPercentage\nTotal}}", startDate, endDate),
 		Variables: variable{
 			StartDate: startDate,
 			EndDate:   endDate,
@@ -111,7 +111,7 @@ func callGetStats(postBody []byte) {
 	var record NewStats
 	responseBody := bytes.NewBuffer(postBody)
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://128.199.84.236/graphql", responseBody)
+	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responseBody)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Origin", "http://fakewebsite.com")
 	resp, err := client.Do(req)

@@ -9,13 +9,12 @@ import (
 )
 
 var (
-	background        = color.NRGBA{R: 0xC0, G: 0xC0, B: 0xC0, A: MyAlpha}
-	Red               = color.NRGBA{R: 0xC0, G: 0x40, B: 0x40, A: MyAlpha}
-	Green             = color.NRGBA{R: 0x40, G: 0xC0, B: 0x40, A: MyAlpha}
-	Blue              = color.NRGBA{R: 0x40, G: 0x40, B: 0xC0, A: MyAlpha}
-	White             = color.NRGBA{R: 228, G: 220, B: 220, A: MyAlpha}
-	OffWhite          = color.NRGBA{R: 187, G: 169, B: 169, A: MyAlpha}
-	MyAlpha           uint8
+	Background        = color.NRGBA{R: 0xC0, G: 0xC0, B: 0xC0, A: 0}
+	Red               = color.NRGBA{R: 0xC0, G: 0x40, B: 0x40, A: 255}
+	Green             = color.NRGBA{R: 0x40, G: 0xC0, B: 0x40, A: 255}
+	Blue              = color.NRGBA{R: 0x40, G: 0x40, B: 0xC0, A: 255}
+	White             = color.NRGBA{R: 228, G: 220, B: 220, A: 255}
+	OffWhite          = color.NRGBA{R: 187, G: 169, B: 169, A: 255}
 	CurrentScreen     = "finance"
 	CurrentScreenID   int
 	MaxWidth          int
