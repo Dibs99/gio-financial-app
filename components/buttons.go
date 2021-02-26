@@ -4,6 +4,7 @@ import (
 	"gio-test/haslett/config"
 	"image"
 	"image/color"
+	"time"
 
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
@@ -21,14 +22,13 @@ func delete(gtx layout.Context) {
 var (
 	button             = new(widget.Clickable)
 	buttonState        = true
-	FinanceButton      = Button{pressed: false, currentColor: config.Blue, initialColor: config.Blue, hoverColor: config.Red, sizeX: 100, sizeY: 50, callBack: delete}
-	weddingButton      = Button{pressed: false, currentColor: config.Green, initialColor: config.Green, hoverColor: config.Red, sizeX: 100, sizeY: ButtonSizeY, callBack: weddingSetUpCallBack}
+	FinanceButton      = Button{Pressed: false, currentColor: config.Blue, initialColor: config.Blue, hoverColor: config.Red, sizeX: 100, sizeY: 50, callBack: delete}
+	weddingButton      = Button{Pressed: false, currentColor: config.Green, initialColor: config.Green, hoverColor: config.Red, sizeX: 100, sizeY: ButtonSizeY, callBack: weddingSetUpCallBack}
 	weddingBoxButton   = AreaButton{pressed: false, currentColor: config.Red, initialColor: config.Red, hoverColor: config.OffWhite}
+	TimeTrigger        = time.Now()
 	AreaButtonArray    []AreaButton
 	PieChartAreaButton         = AreaTriggerButton{pressed: false}
 	ButtonSizeY        float32 = 50
-	FirstRender                = true
-	// weddingBoxButton =
 )
 
 func NewAreaButton() {
@@ -42,7 +42,7 @@ func NewAreaButton() {
 }
 
 type Button struct {
-	pressed      bool
+	Pressed      bool
 	currentColor color.NRGBA
 	hoverColor   color.NRGBA
 	initialColor color.NRGBA
@@ -61,6 +61,7 @@ func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 			switch e.Type {
 			case pointer.Press:
 				config.CurrentScreen = screen
+				TimeTrigger = time.Now()
 				b.callBack(gtx)
 			case pointer.Enter:
 				b.currentColor = b.hoverColor

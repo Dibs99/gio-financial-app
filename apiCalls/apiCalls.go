@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
@@ -43,7 +45,7 @@ type NewStats struct {
 			MyCategory string      `json:"mycategory"`
 			Percentage string      `json:"percentage"`
 			Total      float32     `json:"total"`
-			Colour     interface{} `json:"colour"`
+			Colour     color.NRGBA `json:"colour"`
 		} `json:"readBankStatements"`
 	} `json:"data"`
 }
@@ -134,8 +136,16 @@ func callGetStats(postBody []byte) {
 			log.Fatal("getStat err2: ")
 			log.Fatal(err2)
 		}
-	}
+		random := func() uint8 {
+			return uint8(rand.Intn(80) + 80)
+		}
+		// iterate over record and add a colour
+		for i := range record.Data.ReadBankStatements {
+			colour := color.NRGBA{G: random(), B: random(), R: random(), A: 0xFF}
+			record.Data.ReadBankStatements[i].Colour = colour
+		}
 
+	}
 	MyStats = record
 }
 

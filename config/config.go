@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	Background        = color.NRGBA{R: 0xC0, G: 0xC0, B: 0xC0, A: 0}
+	Background        = color.NRGBA{R: 255, G: 255, B: 255, A: 0}
 	Red               = color.NRGBA{R: 0xC0, G: 0x40, B: 0x40, A: 255}
 	Green             = color.NRGBA{R: 0x40, G: 0xC0, B: 0x40, A: 255}
 	Blue              = color.NRGBA{R: 0x40, G: 0x40, B: 0xC0, A: 255}

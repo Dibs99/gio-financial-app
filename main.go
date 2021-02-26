@@ -2,10 +2,8 @@ package main
 
 import (
 	"image"
-	"image/color"
 	"image/png"
 	"log"
-	"math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -70,8 +68,7 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return components.ErrorMessage(gtx, Ui) })
 			}
 			if config.CurrentScreen == "finance" {
-
-				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return financeLayout(axis, gtx, stats, Ui) })
+				masterWidgetList = append(masterWidgetList, func(gtx layout.Context) layout.Dimensions { return financeLayout(axis, gtx, Ui) })
 
 			}
 			if config.CurrentScreen == "weddings" {
@@ -100,7 +97,6 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 				})
 			})
 			animate.FadeInValue(gtx, config.Background, 254)
-
 			// Push the footer tabs to the bottom of the screen
 			footerSave := op.Save(gtx.Ops)
 			op.Offset(f32.Pt(0, float32(gtx.Constraints.Max.Y-gtx.Px(unit.Dp(components.ButtonSizeY))))).Add(gtx.Ops)
@@ -127,25 +123,16 @@ func drawImage(ops *op.Ops) {
 	paint.PaintOp{}.Add(ops)
 }
 
-func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.Dimensions {
+func PieChart(ops *op.Ops, gtx layout.Context) layout.Dimensions {
 	var path clip.Path
 	const r = 50 // roundness
 	bounds := f32.Rect(0, 0, 100, 100)
 	var variableCount float32 = 0
 	var xCount float32 = 0
 	var YCount float32 = 0
-	setColour := func(index int, colour interface{}) {
-		stats.Data.ReadBankStatements[index].Colour = colour
-	}
-	for i, s := range stats.Data.ReadBankStatements {
-		random := func() uint8 {
-			return uint8(rand.Intn(80) + 80)
-		}
-		if s.Colour == nil {
-			colour := color.NRGBA{G: random(), B: random(), R: random(), A: 0xFF}
-			s.Colour = colour
-			setColour(i, colour)
-		}
+
+	for _, s := range apiCalls.MyStats.Data.ReadBankStatements {
+
 		if s.MyCategory == "payments" {
 			continue
 		}
@@ -217,7 +204,7 @@ func PieChart(ops *op.Ops, gtx layout.Context, stats apiCalls.NewStats) layout.D
 		clip.Outline{Path: path.End()}.Op().Add(ops)
 		clip.RRect{Rect: bounds, SE: r, SW: r, NW: r, NE: r}.Add(ops)
 
-		paint.ColorOp{Color: s.Colour.(color.NRGBA)}.Add(ops)
+		paint.ColorOp{Color: s.Colour}.Add(ops)
 
 		paint.PaintOp{}.Add(ops)
 		stack.Load()

@@ -67,7 +67,6 @@ func inputWidget(gtx layout.Context, ui *ThisUi) layout.Widget {
 	for _, e := range lineEditor.Events() {
 		if e, ok := e.(widget.SubmitEvent); ok {
 			apiCalls.GetStatsWithDate(editor.Text(), e.Text)
-			lineEditor.SetText("")
 		}
 	}
 
@@ -101,6 +100,11 @@ func financeChildren(gtx layout.Context, ui *ThisUi, financeChildMaxY float32) [
 	}))
 	array = append(array, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 		return layout.UniformInset(unit.Dp(16)).Layout(gtx, inputWidget(gtx, ui))
+	}))
+	array = append(array, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+		return layout.UniformInset(unit.Dp(16)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			return material.Body1(ui.theme, "*defaults to the last 6 months of records").Layout(gtx)
+		})
 	}))
 	stats := apiCalls.MyStats
 	for i := 0; i < len(stats.Data.ReadBankStatements); i++ {
@@ -140,7 +144,7 @@ func financeChild(gtx layout.Context, financeChildMaxY float32, ui *ThisUi, inde
 					stack := op.Save(gtx.Ops)
 					op.Offset(f32.Pt(float32(-max-5), 0)).Add(gtx.Ops)
 					clip.RRect{Rect: f32.Rect(0, 0, float32(max), float32(max)), SE: roundness, SW: roundness, NW: roundness, NE: roundness}.Add(gtx.Ops)
-					paint.ColorOp{Color: stat.Colour.(color.NRGBA)}.Add(gtx.Ops)
+					paint.ColorOp{Color: stat.Colour}.Add(gtx.Ops)
 					paint.PaintOp{}.Add(gtx.Ops)
 					stack.Load()
 					return body.Layout(gtx)
@@ -150,7 +154,7 @@ func financeChild(gtx layout.Context, financeChildMaxY float32, ui *ThisUi, inde
 				// text
 				text := fmt.Sprintf("$%v", stat.Total)
 				if PieChartAreaButton.pressed {
-					text = stat.Percentage
+					text = fmt.Sprintf("%v%%", stat.Percentage)
 				}
 				myInset := unit.Dp(financeChildMaxY / 2)
 				body := material.Body1(ui.theme, text)
@@ -173,6 +177,7 @@ func ErrorMessage(gtx layout.Context, ui *ThisUi) layout.Dimensions {
 	paint.PaintOp{}.Add(gtx.Ops)
 	stack.Load()
 	text := material.Body1(ui.theme, apiCalls.Error)
+	text.MaxLines = 1
 	return layout.UniformInset(unit.Dp((float32(myInset)-text.TextSize.V)/2.5)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return text.Layout(gtx)
 	})
