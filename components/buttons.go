@@ -29,6 +29,7 @@ var (
 	AreaButtonArray    []AreaButton
 	PieChartAreaButton         = AreaTriggerButton{pressed: false}
 	ButtonSizeY        float32 = 50
+	CurrentlyScrolling         = false
 )
 
 func NewAreaButton() {
@@ -58,11 +59,14 @@ func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 	// here we loop through all the events associated with this button.
 	for _, e := range gtx.Events(b) {
 		if e, ok := e.(pointer.Event); ok {
+
 			switch e.Type {
 			case pointer.Press:
-				config.CurrentScreen = screen
-				TimeTrigger = time.Now()
+
 				b.callBack(gtx)
+				TimeTrigger = time.Now()
+				config.CurrentScreen = screen
+
 			case pointer.Enter:
 				b.currentColor = b.hoverColor
 			case pointer.Leave:
@@ -77,7 +81,7 @@ func (b *Button) Layout(gtx layout.Context, screen string) layout.Dimensions {
 	pointer.CursorNameOp{Name: pointer.CursorPointer}.Add(gtx.Ops)
 	pointer.InputOp{
 		Tag:   b,
-		Types: pointer.Press | pointer.Enter | pointer.Leave,
+		Types: pointer.Press | pointer.Enter | pointer.Leave | pointer.Scroll,
 	}.Add(gtx.Ops)
 
 	// Draw the button.

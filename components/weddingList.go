@@ -16,7 +16,7 @@ import (
 
 func WeddingScreen(gtx layout.Context, ui *ThisUi) layout.Dimensions {
 	weddings := apiCalls.MyWeddings.Data.ReadHaslettWeddingss.Edges
-	flex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
+	flex := layout.Flex{Axis: layout.Vertical}
 	return flex.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return material.H3(ui.theme, weddings[config.CurrentScreenID].Node.Name).Layout(gtx)
@@ -24,19 +24,34 @@ func WeddingScreen(gtx layout.Context, ui *ThisUi) layout.Dimensions {
 		layout.Rigid(weddingScreenChild(gtx, ui, "Date", weddings[config.CurrentScreenID].Node.Date)),
 		layout.Rigid(weddingScreenChild(gtx, ui, "Stage", weddings[config.CurrentScreenID].Node.Stage)),
 		layout.Rigid(weddingScreenChild(gtx, ui, "Package", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Package))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Date", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Date))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Venue", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Venue))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Aisle", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Aisle))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Signing", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Signing))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Exit", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Exit))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Reception Walk In", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.ReceptionWalkIn))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "First Dance", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.FirstDance))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Notes", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Notes))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Dinner Provided", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.DinnerProvided))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "How did they hear about me", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.HowDidTheyHearAboutMe))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Personal Details", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.PersonalDetails))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Deposit", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.PersonalDetails))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Gross", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Gross))),
+		layout.Rigid(weddingScreenChild(gtx, ui, "Net", fmt.Sprintf("%v", weddings[config.CurrentScreenID].Node.Net))),
 	)
 }
 
 func weddingScreenChild(gtx layout.Context, ui *ThisUi, title string, value string) layout.Widget {
-	myInset := unit.Dp(10)
-	flex := layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle, Spacing: layout.SpaceBetween}
+	var myInset float32 = 10
+	flex := layout.Flex{Axis: layout.Horizontal, Spacing: layout.SpaceBetween}
 	return func(gtx layout.Context) layout.Dimensions {
-		return layout.Inset{Top: myInset, Left: myInset, Right: myInset}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.Inset{Top: unit.Dp(myInset * 2), Left: unit.Dp(myInset), Right: unit.Dp(myInset)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			return flex.Layout(gtx,
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					return material.H6(ui.theme, title).Layout(gtx)
 				}),
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Max.X = gtx.Px(unit.Dp(200))
 					return material.H6(ui.theme, value).Layout(gtx)
 				}),
 			)

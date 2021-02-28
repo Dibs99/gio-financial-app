@@ -177,7 +177,7 @@ func ErrorMessage(gtx layout.Context, ui *ThisUi) layout.Dimensions {
 	paint.PaintOp{}.Add(gtx.Ops)
 	stack.Load()
 	text := material.Body1(ui.theme, apiCalls.Error)
-	text.MaxLines = 1
+	// text.MaxLines = 1
 	return layout.UniformInset(unit.Dp((float32(myInset)-text.TextSize.V)/2.5)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return text.Layout(gtx)
 	})

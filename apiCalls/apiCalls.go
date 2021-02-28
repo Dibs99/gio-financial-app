@@ -44,7 +44,7 @@ type NewStats struct {
 		ReadBankStatements []struct {
 			MyCategory string      `json:"mycategory"`
 			Percentage string      `json:"percentage"`
-			Total      float32     `json:"total"`
+			Total      string      `json:"total"`
 			Colour     color.NRGBA `json:"colour"`
 		} `json:"readBankStatements"`
 	} `json:"data"`
@@ -70,11 +70,23 @@ type Weddings struct {
 
 type WeddingNode struct {
 	Node struct {
-		ID      string      `json:"ID"`
-		Name    string      `json:"Name"`
-		Date    string      `json:"Date"`
-		Package interface{} `json:"Package"`
-		Stage   string      `json:"Stage"`
+		ID                    string `json:"ID"`
+		Name                  string `json:"Name"`
+		Date                  string `json:"Date"`
+		Package               string `json:"Package"`
+		Venue                 string `json:"Venue"`
+		Aisle                 string `json:"Aisle"`
+		Signing               string `json:"Signing"`
+		Exit                  string `json:"Exit"`
+		Notes                 string `json:"Notes"`
+		ReceptionWalkIn       string `json:"ReceptionWalkIn"`
+		FirstDance            string `json:"FirstDance"`
+		DinnerProvided        bool   `json:"DinnerProvided"`
+		HowDidTheyHearAboutMe string `json:"HowDidTheyHearAboutMe"`
+		PersonalDetails       string `json:"PersonalDetails"`
+		Gross                 string `json:"Gross"`
+		Net                   string `json:"Net"`
+		Stage                 string `json:"Stage"`
 	} `json:"node"`
 }
 
@@ -82,6 +94,8 @@ var (
 	MyStats    NewStats
 	Error      = ""
 	MyWeddings Weddings
+	// requestDestination = "128.199.84.236"
+	requestDestination = "localhost:8888"
 )
 
 func GetAllStats() {
@@ -113,7 +127,7 @@ func callGetStats(postBody []byte) {
 	var record NewStats
 	responseBody := bytes.NewBuffer(postBody)
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responseBody)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%v/graphql", requestDestination), responseBody)
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Origin", "http://fakewebsite.com")
 	resp, err := client.Do(req)
@@ -132,9 +146,10 @@ func callGetStats(postBody []byte) {
 		// 	log.Fatal("getStat err3: ")
 		// 	log.Fatal(err3)
 		// }
+		// fmt.Print(string(body))
 		if err2 != nil {
 			log.Fatal("getStat err2: ")
-			log.Fatal(err2)
+			log.Fatal(err2.Error())
 		}
 		random := func() uint8 {
 			return uint8(rand.Intn(80) + 80)
@@ -154,12 +169,12 @@ func GetAllWeddings() {
 	var record Weddings
 	postBody, _ := json.Marshal(graphql{
 		OperationName: "readHaslettWeddingssConnection",
-		Query:         "{ readHaslettWeddingss { edges { node { ID Name Date Package Stage } } } }",
+		Query:         "{ readHaslettWeddingss { edges { node { ID Name Date Package Venue Aisle Signing Exit ReceptionWalkIn FirstDance Notes DinnerProvided HowDidTheyHearAboutMe PersonalDetails Gross Net } } } }",
 	})
 	responsebody := bytes.NewBuffer(postBody)
 	client := &http.Client{}
 
-	req, err := http.NewRequest("POST", "http://localhost:8888/graphql", responsebody)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%v/graphql", requestDestination), responsebody)
 	if err != nil {
 		Error = err.Error()
 	}

@@ -96,6 +96,7 @@ func loop(w *app.Window, stats apiCalls.NewStats) error {
 					return layout.UniformInset(unit.Dp(2)).Layout(gtx, masterWidgetList[i])
 				})
 			})
+			components.CurrentlyScrolling = masterList.Dragging()
 			animate.FadeInValue(gtx, config.Background, 254)
 			// Push the footer tabs to the bottom of the screen
 			footerSave := op.Save(gtx.Ops)
