@@ -94,7 +94,6 @@ var (
 	MyStats    NewStats
 	Error      = ""
 	MyWeddings Weddings
-	// requestDestination = "128.199.84.236"
 	requestDestination = "localhost:8888"
 )
 
